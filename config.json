@@ -1,0 +1,7 @@
+{
+"openai_key":"sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+"Generate_prompts_from_ChatGPT":false,
+"prompts_file":"./prompts.json",
+"port":3000,
+"title":"Fill In"
+}

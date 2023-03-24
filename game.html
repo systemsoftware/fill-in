@@ -1,0 +1,243 @@
+<head>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <title>Game</title>
+    <link rel="stylesheet" href="/css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8">
+  </head>
+  <style>
+    body {
+      width: 100%;
+    }
+  </style>
+  <div id="plist" style="cursor: pointer;z-index:499;position: fixed; top:0;right: 0px;background-color: whitesmoke;padding-right: 10px;padding-left: 10px;border-bottom-left-radius: 10px;"> Menu </div>
+  <div id="playerlist_" class="overlay">
+    <div id="playerlist" class="overlay-content"></div>
+  </div>
+  <div style="width: 100%; height: 5%;top: 35%; bottom: 50%;position: fixed;" id="top" class="top">This is a _____ prompt.</div>
+  <br>
+  <br>
+  <div style="position: fixed; top: 50%; bottom: 50%;width: 100%;">
+    <input id="in" placeholder="Type your completion here!" style="width: 50%;">
+    <button id="submit">Submit</button>
+    <br>
+    <Br>
+    <label style="font-size: x-small;">Split multiple with /</label>
+  </div>
+  <div id="res" style="overflow-y: scroll !important;display:none;position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #979797;z-index: 100000;">
+    <h2 id="res_top">Vote for your favorite answer!</h2>
+    <h4 id="res_prompt"></h4>
+    <div id="a"></div>
+  </div>
+  <div id="waiting" class="overlay">
+    <div class="overlay-content">
+      <h3 id="w_top">These are the idiots you're going to beat.</h3>
+      <p id="w_inv">Not enough people for you? Invite some with the code: </p>
+      <div id="w_p"></div>
+      <button id="w_reload">Reload</button>
+      <button id="cpy">Copy invite</button>
+      <button id="start_game">Start the game.</button>
+    </div>
+  </div>
+  <div id="submitted" class="overlay">
+    <div class="overlay-content">
+      <h3 id="sub_top">Waiting for the other players to submit their (inferior) answers.</h3>
+    </div>
+  </div>
+  <div id="voted" class="overlay">
+    <div class="overlay-content">
+      <h3 id="voted_top">You have cast your vote.</h3>
+    </div>
+  </div>
+  <div id="new_prompt" class="overlay">
+    <div class="overlay-content">
+      <h3>Add Custom Prompt</h3>
+      <p>Have any idea for a prompt? Add it for a chance to play it during this game! To match the default, use 5 underscores for blanks (_____)</p>
+      <input id="new_prompt_input" style="width: 50%;" placeholder="Type your prompt here!">
+      <button onclick="document.getElementById('new_prompt').style.display='none'">Cancel</button>
+      <button id="new_prompt_submit">Submit</button>
+    </div>
+  </div>
+  <div id="vote_res" class="overlay">
+    <div class="overlay-content">
+      <h3 id="u_won"></h3>
+      <p id="u_content"></p>
+    </div>
+  </div>
+  <script>
+    const getCookie = (name) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+    if (location.pathname.endsWith('/')) {
+      location = location.pathname.slice(0, -1)
+    }
+    const socket = io();
+    socket.emit("join")
+    document.getElementById('w_inv').innerHTML += `
+                                          <code>${location.pathname.split('/')[2]}</code>`
+    document.getElementById('w_inv').onclick = () => {
+      navigator.clipboard.writeText(location.pathname.split('/')[2]);
+    }
+    document.getElementById('cpy').onclick = () => {
+      navigator.clipboard.writeText(location);
+      setTimeout(() => {
+        alert('Copied invite!')
+      }, 200)
+    }
+    socket.on("prompt", (data) => {
+      document.getElementsByClassName('top')[0].innerHTML = data.prompt;
+    })
+    document.getElementById('submit').onclick = () => {
+      if (document.getElementById('in').value.length < 1) return alert('You need to type something!')
+      socket.emit("answer", document.getElementById('in').value)
+      document.getElementById('submitted').style.display = 'block'
+    }
+    socket.on("results", (data) => {
+      document.getElementById('submitted').style.display = 'none'
+      const a = document.getElementById('a')
+      const res = document.getElementById('res')
+      res.style.display = "block";
+      document.getElementById('res_prompt').innerHTML = data.prompt
+      document.getElementById('in').value = "";
+      a.innerHTML = "";
+      data.results.forEach(element => {
+        const div = document.createElement('div');
+        div.style.width = '50%'
+        div.style.margin = 'auto'
+        div.style.marginBottom = '10px';
+        div.style.borderRadius = '10px'
+        element.answer.split('/').filter(e => e.length).forEach(answer => {
+          if (element.user == getCookie('user')) return
+          const __ = document.createElement('div');
+          __.innerHTML = answer;
+          __.className = 'card'
+          div.onclick = () => {
+            socket.emit("vote", element.id)
+            document.getElementById('voted').style.display = 'block'
+            document.getElementById('res').style.display = "none";
+          }
+          if (element.answer.split('/').length > 1) div.style.border = '1px solid black'
+          div.appendChild(__);
+        })
+        a.appendChild(div);
+      });
+    })
+    socket.on("end", (data) => {
+      document.getElementById('vote_res').style.display = 'block'
+      document.getElementById('voted').style.display = 'none'
+      document.getElementById('res').style.display = "none";
+      setTimeout(() => {
+        document.getElementById('vote_res').style.display = 'none'
+      }, 3000);
+      document.getElementById('u_won').innerHTML = `${data.winner} won with ${data.votes} votes!`
+      document.getElementById('u_content').innerHTML = `Their answer was ${data.answer}`
+      document.getElementById('top').innerHTML = data.new_prompt
+      document.getElementById('res').style.display = "none";
+    })
+    socket.on('start', () => {
+      document.getElementById('waiting').style.display = 'none'
+    })
+    socket.on("new_player", (player) => {
+      document.getElementById('w_p').innerHTML = '';
+      fetch(`/game/${location.pathname.split('/')[2]}/json`).then(res => res.json().then(data => {
+        data.players.forEach(player => {
+          if (player.id == getCookie('id')) return
+          const _ = document.createElement('div')
+          _.className = 'player'
+          _.innerHTML = player.name
+          _.id = player.id
+          document.getElementById('w_p').appendChild(_)
+        })
+      }))
+    })
+    socket.on("player_leave", (id) => {
+      document.getElementById(id).remove()
+    })
+    const r = () => {
+      fetch(`/game/${location.pathname.split('/')[2]}/json`).then((res) => {
+        return res.json();
+      }).then((data) => {
+        if (!data.canStart) document.getElementById('start_game').style.display = 'none'
+        document.getElementById('top').innerHTML = data.prompt;
+        if (data.state == 'results') {
+          socket.emit("get_results")
+          document.getElementById('waiting').style.display = 'none'
+          document.getElementById("res").style.display = "block";
+        } else if (data.state == 'waiting') {
+          document.getElementById('waiting').style.display = 'block'
+          document.getElementById('w_p').innerHTML = '';
+          data.players.forEach(player => {
+            const _ = document.createElement('div')
+            _.className = 'player'
+            _.innerHTML = player.name
+            document.getElementById('w_p').appendChild(_)
+          })
+        } else {
+          document.getElementById('waiting').style.display = 'none'
+        }
+      })
+    }
+    window.onload = r
+    document.getElementById('w_reload').onclick = r
+    document.getElementById('plist').onclick = async () => {
+      document.getElementById('playerlist').innerHTML = `
+                                          <br>
+                                              <h2>Players</h2>Invite more with the code, 
+                                              <code>${location.pathname.split('/')[2]}</code>
+                                              <br>
+                                                  <br>`
+      const res = await fetch(`/game/${location.pathname.split('/')[2]}/json`)
+      const data = await res.json()
+      document.getElementById('w_p').innerHTML = '';
+      data.players.forEach(player => {
+        const _ = document.createElement('div')
+        _.className = 'player'
+        _.innerHTML = `${player.name} - ${player.score} points ${player.id == data.last_winner ? '(Last winner)' : player.id == getCookie('id') ? '(You)' : player.creator ? '(Host)' : ''}`
+        document.getElementById('playerlist').appendChild(_)
+      })
+      const closebttn = document.createElement('button')
+      closebttn.innerHTML = 'Close'
+      closebttn.onclick = () => {
+        document.getElementById('playerlist_').style.display = 'none'
+      }
+      const lbttn = document.createElement('button')
+      lbttn.innerHTML = 'Leave'
+      lbttn.style.backgroundColor = 'red'
+      lbttn.onclick = () => {
+        location = '/'
+      }
+      const cpybttn = document.createElement('button')
+      cpybttn.innerHTML = 'Invite'
+      cpybttn.onclick = () => {
+        navigator.clipboard.writeText(location);
+        setTimeout(() => {
+          alert('Copied invite!')
+        }, 200)
+      }
+      const add_bttn = document.createElement('button')
+      add_bttn.innerHTML = 'Custom prompt'
+      add_bttn.onclick = () => {
+        document.getElementById('new_prompt').style.display = 'block'
+        document.getElementById('playerlist_').style.display = 'none'
+      }
+      document.getElementById('playerlist').appendChild(closebttn)
+      document.getElementById('playerlist').appendChild(cpybttn)
+      document.getElementById('playerlist').appendChild(add_bttn)
+      document.getElementById('playerlist').appendChild(lbttn)
+      document.getElementById('playerlist_').style.display = 'block'
+    }
+    socket.on("message", err => alert(err))
+    document.getElementById('new_prompt_submit').onclick = () => {
+      if (!document.getElementById('new_prompt_input').value.length) return alert('You need to type something!')
+      socket.emit("add_custom", document.getElementById('new_prompt_input').value)
+      document.getElementById('new_prompt_input').value = ""
+      document.getElementById('new_prompt').style.display = 'none'
+    }
+    document.getElementById('start_game').onclick = () => {
+      socket.emit("start_game")
+    }
+
+    fetch('/title').then(r => r.text()).then(t => document.title += ` - ${t}`);
+  </script>

@@ -1,0 +1,25 @@
+<head>
+    <title>Enter Username</title>
+    <link rel="stylesheet" href="/css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8">
+</head>
+
+<div style="margin: auto;">
+    <h2>Enter Username</h2>
+    <input id="u" placeholder="Username">
+    <button id="create">Save</button>
+</div>
+<script>
+const u = document.getElementById('u'); 
+const create = document.getElementById('create');
+
+create.onclick = () => {
+if(!u.value) return alert('Enter a username');
+if(u.value.length > 20) return alert('Username must be at most 20 characters long');
+document.cookie = `user=${u.value}; expires=Thu, 31 Dec 9999 12:00:00 UTC; path=/`;
+location.reload();
+}
+
+fetch('/title').then(r => r.text()).then(t => document.title += ` - ${t}`);
+</script>

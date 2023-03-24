@@ -1,0 +1,19 @@
+<head>
+    <title>Preferences</title>
+    <link rel="stylesheet" href="/css">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <div style="margin: auto;">
+    <h2>Preferences</h2>
+    <div class="card" id="name"> Change name </div>
+  </div>
+  <script>
+    document.getElementById('name').onclick = () => {
+      const name = prompt('Enter your new name');
+      if (!name) return alert('Name not changed');
+      if (name.length > 20) return alert('Name too long');
+      document.cookie = `user=${name};path=/`;
+      alert('Name changed! If you are in a game, changes will not take effect until you leave and rejoin.')
+    }
+    fetch('/title').then(r => r.text()).then(t => document.title += ` - ${t}`);
+  </script>

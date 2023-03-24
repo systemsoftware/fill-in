@@ -1,0 +1,14 @@
+<head>
+  <link rel="stylesheet" href="/css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8">
+</head>
+<div style="margin: auto;">
+  <h2>Fill <span contenteditable="true">_____</span> in. </h2>
+  <div class="card" onclick="location='/create'"> New game </div>
+  <div class="card" onclick="location='/join'"> Join game </div>
+  <div class="card" onclick="location='/settings'"> Preferences </div>
+</div>
+<script>
+  fetch('/title').then(r => r.text()).then(t => document.title = t);
+</script>

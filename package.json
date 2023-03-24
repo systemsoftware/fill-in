@@ -1,0 +1,18 @@
+{
+  "name": "fillin",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+    },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "dubnium": "^2.3.1",
+    "express": "^4.18.2",
+    "openai": "^3.2.1",
+    "socket.io": "^4.6.1"
+  }
+}

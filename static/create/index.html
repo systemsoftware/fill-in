@@ -1,0 +1,27 @@
+<head>
+  <title>Create a Game</title>
+  <link rel="stylesheet" href="/css">
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<div id="create" style="margin: auto;">
+  <h2>Create a Game</h2>
+  <input id="priv" type="checkbox">
+  <label for="priv">Private</label>
+  <button id="bttn">Create</button>
+</div>
+<script>
+  const priv = document.getElementById('priv');
+  const create = document.getElementById('create');
+  const _ = io();
+  document.getElementById('bttn').onclick = () => {
+    _.emit('create', {
+      private: priv.checked
+    })
+    document.getElementById('create').innerHTML = "Creating..."
+    _.on("created", (data) => {
+      location.href = "/game/" + data.id
+    })
+  }
+  fetch('/title').then(r => r.text()).then(t => document.title += ` - ${t}`);
+</script>

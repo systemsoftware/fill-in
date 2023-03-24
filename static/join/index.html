@@ -1,0 +1,32 @@
+<head>
+    <link rel="stylesheet" href="/css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="utf-8">
+    <title>Join a Game</title>
+  </head>
+  <div style="margin: auto;">
+    <h2>Join a Game</h2>
+    <input id="id" placeholder="Game ID">
+    <button id="join">Join</button>
+    <br>
+    <br>
+    <label style="font-size: x-small;">Have no friends? <a href="/join/random">Join a random game</a>, if possible. </label>
+  </div>
+  <script>
+    const id = document.getElementById('id');
+    const join = document.getElementById('join');
+    join.onclick = () => {
+      if (id.value == '') {
+        id.focus();
+        return alert('Please enter a game ID');
+      }
+      fetch(`/check/${id.value}`).then(e => e.json().then(data => {
+        if (data.exists) location = `/game/${id.value}`;
+        else alert('Game does not exist');
+      }))
+    }
+    document.onkeydown = (e) => {
+      if (e.key == 'Enter') join.click();
+    }
+    fetch('/title').then(r => r.text()).then(t => document.title += ` - ${t}`);
+  </script>
