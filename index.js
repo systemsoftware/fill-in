@@ -161,7 +161,14 @@ io.on('connection', (socket) => {
         const game = data.get(id);
         if (!game) return socket.disconnect();
         a = a.includes('/') ? a : `${a.substring(0,1).toUpperCase()}${a.substring(1,a.length)}${a.endsWith('.') ? '' : '.'}`;
-        game.content.players.find(p => p.id == getCookie(socket.request, 'id')).answer = a;
+                if(!game.content.players.find(p => p.id == getCookie(socket.request, 'id'))) {
+            game.content.players[getCookie(socket.request, 'id')] = {
+                id: getCookie(socket.request, 'id'),
+                name: getCookie(socket.request, 'user'),
+                score: 0
+            }
+        }
+        game.content.players.find(p => p.id == getCookie(socket.request, 'id'))?.answer = a;
         data.get(id).overwrite(game.content);
         if (game.content.players.filter(p => p.answer).length == game.content.players.length) {
             game.content.state = "results";
