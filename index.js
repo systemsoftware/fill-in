@@ -168,7 +168,7 @@ io.on('connection', (socket) => {
                 score: 0
             }
         }
-        game.content.players.find(p => p.id == getCookie(socket.request, 'id'))?.answer = a;
+        game.content.players.find(p => p.id == getCookie(socket.request, 'id')).answer = a;
         data.get(id).overwrite(game.content);
         if (game.content.players.filter(p => p.answer).length == game.content.players.length) {
             game.content.state = "results";
